@@ -1,28 +1,104 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import xlsxwriter
-from random import *
+import xlsxwriter, random
 
 workbook = xlsxwriter.Workbook('Taller2.xlsx')
 worksheet = workbook.add_worksheet()
 
-formatc = workbook.add_format()
-formatc.set_pattern(1)  # This is optional when using a solid fill.
-formatc.set_bg_color('#FF5504')
+cellHeaderStyling = workbook.add_format({
+	'pattern': 1,
+	'bg_color': '#FF5504',
+	'align': 'center'
+})
 
-worksheet.write('A1','dia',formatc)
-worksheet.write('B1','Inventario Inicial',formatc)
-worksheet.write('C1','#Numero Aleatorio',formatc)
-worksheet.write('D1','Demanda Diaria',formatc)
-worksheet.write('E1','Inventario Final',formatc)
-worksheet.write('F1','#Numero Aleatorio',formatc)
-worksheet.write('G1','Tiempo de Entrega',formatc)
-worksheet.write('H1','#Numero Aleatorio',formatc)
-worksheet.write('I1','#Tiempo de Espera',formatc)
-worksheet.write('J1','Faltante',formatc)
-worksheet.write('K1','Orden',formatc)
-worksheet.write('L1','Espera',formatc)
+cellCenteredStyling = workbook.add_format({
+	'align': 'center'
+})
 
+headerSetup = [
+	{
+		'width': 6,
+		'text': 'Dia',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': cellCenteredStyling
+	},
+	{
+		'width': 15,
+		'text': 'Inventario Inicial',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': cellCenteredStyling
+	},
+	{
+		'width': 18,
+		'text': '#Numero Aleatorio',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': None
+	},
+	{
+		'width': 15,
+		'text': 'Demanda Diaria',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': cellCenteredStyling
+	},
+	{
+		'width': 15,
+		'text': 'Inventario Final',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': cellCenteredStyling
+	},
+	{
+		'width': 18,
+		'text': '#Numero Aleatorio',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': None
+	},
+	{
+		'width': 17,
+		'text': 'Tiempo de Entrega',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': cellCenteredStyling
+	},
+	{
+		'width': 18,
+		'text': '#Numero Aleatorio',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': None
+	},
+	{
+		'width': 18,
+		'text': '#Tiempo de Espera',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': cellCenteredStyling
+	},
+	{
+		'width': 8,
+		'text': 'Faltante',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': cellCenteredStyling
+	},
+	{
+		'width': 8,
+		'text': 'Orden',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': cellCenteredStyling
+	},
+	{
+		'width': 8,
+		'text': 'Espera',
+		'cellStyling': cellHeaderStyling,
+		'colStyling': cellCenteredStyling
+	},
+	{
+		'width': 23,
+		'text': '',
+		'cellStyling': None,
+		'colStyling': None
+	},
+]
+
+for key, headerColSetup in enumerate(headerSetup):
+	worksheet.set_column(key, key, headerColSetup.get('width'), headerColSetup.get('colStyling'))
+	worksheet.write(0, key, headerColSetup.get('text'), headerColSetup.get('cellStyling'))
 
 
 demanda_diaria = {
@@ -53,23 +129,20 @@ tiempo_espera = {
 
 
 inventarioInicial = 100
-te = -1
-orden = 0
-ted = 0
-dacumulada = 0
-dd_espera = list()
-cclienteE = 0
-cclienteN = 0
-for i in range(2,262):
-	if te > 0:
-		te = te -1
-	elif te == 0:
+tiempoEntrega = -1
+orden = tiempoEspera = dacumulada = cclienteE = cclienteN = 0
+dd_espera = []
+
+for i in xrange(1, 261):
+	if tiempoEntrega > 0:
+		tiempoEntrega = tiempoEntrega -1
+	elif tiempoEntrega == 0:
 		if(inventarioInicial + 100 - dacumulada >= 0):
 			inventarioInicial = inventarioInicial + 100 - dacumulada
 			dacumulada = 0
 		else:
 			inventarioInicial = inventarioInicial + 100
-			x = list()
+			x = []
 			while not dd_espera == []:
 				a = dd_espera.pop()
 				if inventarioInicial >= a:					
@@ -79,62 +152,66 @@ for i in range(2,262):
 					x.append(a)
 			
 			dd_espera = x				
-		te = -1
+		tiempoEntrega = -1
 		dacumulada = 0
-	worksheet.write('A%d' % i, i)
-	worksheet.write('B%d' % i, inventarioInicial)
-	n1 = random()
-	worksheet.write('C%d' % i, n1)
+	
+	worksheet.write(i, 0, i)
+	worksheet.write(i, 1, inventarioInicial)
+	n1 = random.random()
+	worksheet.write(i, 2, n1)
 	dd = 0
+
 	for j in demanda_diaria:
 		if n1 >= demanda_diaria[j][0]  and  n1 <= demanda_diaria[j][1]: 
-			worksheet.write('D%d' % i,j)
+			worksheet.write(i, 3, j)
 			dd = int(j)
 	if(inventarioInicial >= dd) and (inventarioInicial >= 30):
 		inventarioInicial = inventarioInicial - dd
-		worksheet.write('E%d' % i,inventarioInicial)
+		worksheet.write(i, 4, inventarioInicial)
 	else:
-		if(te < 0):
-			n2 = random()
-			worksheet.write('F%d' %i,n2)
+		if(tiempoEntrega < 0):
+			n2 = random.random()
+			worksheet.write(i, 5, n2)
 			for j in tiempo_entrega:
 				if n2 >= tiempo_entrega[j][0] and n2 <= tiempo_entrega[j][1]:
-					worksheet.write('G%d'%i,j)
-					te = int(j)
+					worksheet.write(i, 6, j)
+					tiempoEntrega = int(j)
 					orden = orden +1
-					worksheet.write('K%d' % i,orden)
-	if(inventarioInicial < dd) or (te > 0):
-		n3 = random()
-		worksheet.write('H%d' %i,n3)
+					worksheet.write(i, 10, orden)
+	if(inventarioInicial < dd) or (tiempoEntrega > 0):
+		n3 = random.random()
+		worksheet.write(i, 7, n3)
 		for j in tiempo_espera:
 			if n3 >= tiempo_espera[j][0] and n3 <= tiempo_espera[j][1]:
-				ted = int(j)
-				worksheet.write('I%d' %i,ted)
-				if ted >= te:
-					worksheet.write('L%d' %i,'SI')
+				tiempoEspera = int(j)
+				worksheet.write(i, 8, tiempoEspera)
+				if tiempoEspera >= tiempoEntrega:
+					worksheet.write(i, 11, 'SI')
 					dacumulada = dacumulada + dd
-					worksheet.write('J%d' %i,dacumulada)
+					worksheet.write(i, 9, dacumulada)
 					dd_espera.append(dd)
 					cclienteE = cclienteE + 1
 				else:
-					worksheet.write('L%d' %i,'NO')
-					cclienteN = cclienteN +1
+					worksheet.write(i, 11, 'NO')
+					cclienteN = cclienteN + 1
 
 worksheet.write('M3','Costo de Ordenar')
 worksheet.write('M4',orden*100)		
 worksheet.write('M5','Costo de Inventario')
-worksheet.write('M6',float(52*260)/360.0)	
+worksheet.write('M6',float(52 * 260)/360.0)	
 worksheet.write('M7','Costo Cliente Espera')
-worksheet.write('M8',20*cclienteE)	
+worksheet.write('M8',20 * cclienteE)	
 worksheet.write('M9','Costo Cliente No Espera')
-worksheet.write('M10',50*cclienteN)	
+worksheet.write('M10',50 * cclienteN)	
 
-green_format = workbook.add_format()
-green_format.set_pattern(1) 
-green_format.set_bg_color('#FF0000')
-	
+green_format = workbook.add_format({
+	'pattern': 1,
+	'bg_color': '#00FF00'
+})
+
 worksheet.write('M11','COSTO TOTAL', green_format)
-worksheet.write('M12',orden*100 + float(52*260)/360.0 + 20*cclienteE + 50*cclienteN, green_format)		
+costoTotal = orden * 100 + float(52 * 260/360.0) + (20 * cclienteE) + (50 * cclienteN)
+worksheet.write('M12', costoTotal, green_format)		
 		
 		
 		
